@@ -1,0 +1,9 @@
+{
+  "short_ema": 6,
+  "long_ema": 20,
+  "buy_threshold": 2.0,
+  "sell_threshold": -4.0,
+  "trailing_stop_pct": 0.7,
+  "max_loss_pct": -3.0,
+  "rsi_window": 10
+}

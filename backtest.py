@@ -1,5 +1,6 @@
 import itertools
 import json
+import os
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Dict, List
@@ -151,19 +152,34 @@ def score_result(result: BacktestResult) -> float:
     return (result.pnl_pct * 1.8) + (result.win_rate * 0.3) - (result.max_drawdown_pct * 1.1)
 
 
-def main() -> None:
+def main(fast_mode: bool | None = None) -> None:
+    if fast_mode is None:
+        env_fast = str(os.getenv("BACKTEST_FAST_MODE", "1")).strip().lower()
+        fast_mode = env_fast in {"1", "true", "yes", "on"}
+
     df = fetch_history()
     prices = df["Close"]
 
-    grid = {
-        "short_ema": [4, 5, 6, 8],
-        "long_ema": [16, 20, 24, 30],
-        "buy_threshold": [1.0, 2.0, 3.0, 4.0],
-        "sell_threshold": [-3.0, -4.0, -5.0, -6.0],
-        "trailing_stop_pct": [0.4, 0.5, 0.7, 1.0],
-        "max_loss_pct": [-2.5, -3.0, -4.0],
-        "rsi_window": [10, 14, 18],
-    }
+    if fast_mode:
+        grid = {
+            "short_ema": [5, 6],
+            "long_ema": [20, 24],
+            "buy_threshold": [1.0, 2.0],
+            "sell_threshold": [-4.0, -5.0],
+            "trailing_stop_pct": [0.5, 0.7],
+            "max_loss_pct": [-3.0, -4.0],
+            "rsi_window": [10, 14],
+        }
+    else:
+        grid = {
+            "short_ema": [4, 5, 6, 8],
+            "long_ema": [16, 20, 24, 30],
+            "buy_threshold": [1.0, 2.0, 3.0, 4.0],
+            "sell_threshold": [-3.0, -4.0, -5.0, -6.0],
+            "trailing_stop_pct": [0.4, 0.5, 0.7, 1.0],
+            "max_loss_pct": [-2.5, -3.0, -4.0],
+            "rsi_window": [10, 14, 18],
+        }
 
     best_params: Dict[str, float] = {}
     best_result: BacktestResult | None = None
@@ -171,15 +187,24 @@ def main() -> None:
     all_results: List[Dict[str, object]] = []
 
     keys = list(grid.keys())
+    total_combos = 1
+    for k in keys:
+        total_combos *= len(grid[k])
+    print(f"Backtest mode: {'FAST' if fast_mode else 'FULL'} | raw combos: {total_combos}")
+
+    checked = 0
     for values in itertools.product(*(grid[k] for k in keys)):
         params = dict(zip(keys, values))
         if params["short_ema"] >= params["long_ema"]:
             continue
 
+        checked += 1
         result = run_backtest(prices=prices, **params)
         s = score_result(result)
         row = {"params": params, "result": asdict(result), "score": round(s, 4)}
         all_results.append(row)
+        if checked % 20 == 0:
+            print(f"Backtest progress: checked={checked}")
 
         if s > best_score:
             best_score = s

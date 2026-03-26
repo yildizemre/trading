@@ -1,0 +1,23 @@
+{
+  "symbol": "BZ=F",
+  "period": "60d",
+  "interval": "15m",
+  "best_params": {
+    "short_ema": 6,
+    "long_ema": 20,
+    "buy_threshold": 2.0,
+    "sell_threshold": -4.0,
+    "trailing_stop_pct": 0.7,
+    "max_loss_pct": -3.0,
+    "rsi_window": 10
+  },
+  "best_result": {
+    "final_balance": 1792.19,
+    "pnl": 792.19,
+    "pnl_pct": 79.22,
+    "trades": 230,
+    "win_rate": 53.04,
+    "max_drawdown_pct": 9.07
+  },
+  "score": 148.531
+}

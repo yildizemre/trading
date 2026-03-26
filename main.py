@@ -82,7 +82,9 @@ def maybe_run_startup_backtest() -> None:
 
     log("Startup backtest basliyor...")
     try:
-        bt.main()
+        mode = os.getenv("STARTUP_BACKTEST_MODE", "fast").strip().lower()
+        fast_mode = mode != "full"
+        bt.main(fast_mode=fast_mode)
         log("Startup backtest tamamlandi, best_params.json guncellendi.")
     except Exception as exc:
         log(f"Startup backtest hatasi: {exc}. Varsayilan/onceki parametrelerle devam ediliyor.")
