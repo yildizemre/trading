@@ -1,0 +1,5 @@
+yfinance
+pandas
+python-telegram-bot
+feedparser
+requests
